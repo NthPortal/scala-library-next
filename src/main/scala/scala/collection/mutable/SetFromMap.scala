@@ -54,11 +54,10 @@ private[collection] class SetFromMap[A](protected[collection] val underlying: Ma
   extends AbstractSet[A]
   with SetFromMapOps[A, Map, Map[A, Unit], SetFromMap, SetFromMap[A]]
   with SetFromMapOps.Unsorted[A, Map, SetFromMap]
+  with SetFromMapOps.DynamicClassName
   with IterableFactoryDefaults[A, SetFromMap]
   with DefaultSerializable {
   protected[this] def fromMap[B](m: Map[B, Unit]): SetFromMap[B] = new SetFromMap(m)
-
-  override protected[this] def className: String = "SetFromMap"
 
   override def iterableFactory: IterableFactory[SetFromMap] = SetFromMap(underlying.mapFactory)
 }
@@ -81,12 +80,11 @@ private class SeqSetFromMap[A](protected[collection] val underlying: SeqMap[A, U
   extends AbstractSet[A]
   with SetFromMapOps[A, SeqMap, SeqMap[A, Unit], SeqSetFromMap, SeqSetFromMap[A]]
   with SetFromMapOps.Unsorted[A, SeqMap, SeqSetFromMap]
+  with SetFromMapOps.DynamicClassName
   with SeqSet[A]
   with IterableFactoryDefaults[A, SeqSetFromMap]
   with DefaultSerializable {
   protected[this] def fromMap[B](m: SeqMap[B, Unit]): SeqSetFromMap[B] = new SeqSetFromMap(m)
-
-  override protected[this] def className: String = "SeqSetFromMap"
 
   override def iterableFactory: IterableFactory[SeqSetFromMap] = SeqSetFromMap(underlying.mapFactory)
 }
@@ -109,6 +107,7 @@ private class SortedSetFromMap[A](protected[collection] val underlying: SortedMa
   extends AbstractSet[A]
   with SetFromMapOps[A, Map, SortedMap[A, Unit], Set, SortedSetFromMap[A]]
   with SetFromMapOps.Sorted[A, SortedMap, Set, SortedSetFromMap]
+  with SetFromMapOps.DynamicClassName
   with SortedSet[A]
   with SortedSetOps[A, SortedSetFromMap, SortedSetFromMap[A]]
   with IterableFactoryDefaults[A, Set]
@@ -118,8 +117,6 @@ private class SortedSetFromMap[A](protected[collection] val underlying: SortedMa
 
   protected[this] def fromSortedMap[B: Ordering](m: SortedMap[B, Unit]): SortedSetFromMap[B] =
     new SortedSetFromMap(m)
-
-  override protected[this] def className: String = "SortedSetFromMap"
 
   override def iterableFactory: IterableFactory[SetFromMap] = SetFromMap(underlying.mapFactory)
 
