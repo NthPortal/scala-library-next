@@ -17,7 +17,13 @@ import scala.annotation.implicitNotFound
 import scala.collection.SetFromMapOps.WrappedMap
 import scala.reflect.ClassTag
 
-trait SetFromMapOps[
+// Implementation note: The `concurrent.Set` implementation
+//   inherits from this, so we have to be careful about
+//   making changes that do more than forward to the
+//   underlying `Map`. If we have a method implementation
+//   that is not atomic, we MUST override that method in
+//   `concurrent.SetFromMap`.
+private trait SetFromMapOps[
   A,
   +MM[K, V] <: MapOps[K, V, MM, _],
   +M <: MapOps[A, Unit, MM, M],
@@ -170,17 +176,18 @@ trait SetFromMapOps[
   override def view: View[A] = underlying.keySet.view
 }
 
-object SetFromMapOps {
+private object SetFromMapOps {
 
   // top type to make pattern matching easier
   sealed trait WrappedMap[A] extends IterableOnce[A] {
     protected[collection] val underlying: IterableOnce[(A, Unit)]
   }
 
-  trait DynamicClassName { self: Iterable[_] =>
+  trait DynamicClassName {
+    self: Iterable[_] =>
     protected[collection] val underlying: Iterable[_]
 
-    override protected[this] def className: String = s"SetFrom_${underlying.collectionClassName}"
+    override protected[this] def className: String = s"SetFrom_${ underlying.collectionClassName }"
   }
 
   // unknown whether mutable or immutable
@@ -281,7 +288,7 @@ object SetFromMapOps {
 
 }
 
-abstract class SetFromMapFactory[+MM[K, V] <: Map[K, V], +CC[A] <: WrappedMap[A]](mf: MapFactory[MM])
+private abstract class SetFromMapFactory[+MM[K, V] <: Map[K, V], +CC[A] <: WrappedMap[A]](mf: MapFactory[MM])
   extends IterableFactory[CC]
   with Serializable {
   protected[this] def fromMap[A](map: MM[A, Unit]): CC[A]
@@ -317,7 +324,7 @@ abstract class SetFromMapFactory[+MM[K, V] <: Map[K, V], +CC[A] <: WrappedMap[A]
 
 }
 
-abstract class SortedSetFromMapFactory[+MM[K, V] <: SortedMap[K, V], +CC[A] <: WrappedMap[A]](mf: SortedMapFactory[MM])
+private abstract class SortedSetFromMapFactory[+MM[K, V] <: SortedMap[K, V], +CC[A] <: WrappedMap[A]](mf: SortedMapFactory[MM])
   extends SortedIterableFactory[CC]
   with Serializable {
   protected[this] def fromMap[A: Ordering](map: MM[A, Unit]): CC[A]
@@ -353,16 +360,16 @@ abstract class SortedSetFromMapFactory[+MM[K, V] <: SortedMap[K, V], +CC[A] <: W
 
 }
 
-sealed abstract class SetFromMapMetaFactoryBase[MM[K, V] <: Map[K, V], +CC[A] <: Set[A]] {
+private sealed abstract class SetFromMapMetaFactoryBase[MM[K, V] <: Map[K, V], +CC[A] <: Set[A]] {
   def apply[A](map: MM[A, Unit]): CC[A]
 }
 
-abstract class SetFromMapMetaFactory[MM[K, V] <: Map[K, V], +CC[A] <: Set[A]]
+private abstract class SetFromMapMetaFactory[MM[K, V] <: Map[K, V], +CC[A] <: Set[A]]
   extends SetFromMapMetaFactoryBase[MM, CC] {
   def apply(factory: MapFactory[MM]): IterableFactory[CC]
 }
 
-abstract class SortedSetFromMapMetaFactory[MM[K, V] <: SortedMap[K, V], +CC[A] <: SortedSet[A]]
+private abstract class SortedSetFromMapMetaFactory[MM[K, V] <: SortedMap[K, V], +CC[A] <: SortedSet[A]]
   extends SetFromMapMetaFactoryBase[MM, CC] {
   def apply(factory: SortedMapFactory[MM]): SortedIterableFactory[CC]
 }
